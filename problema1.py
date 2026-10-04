@@ -11,37 +11,40 @@ OUTPUT_DIR = Path(__file__).parent / "outputs"
 IMG_PATH = DATA_DIR / "Imagen_con_detalles_escondidos.tif"
 
 
-def ecualizacion_local(img: np.ndarray, M: int, N: int) -> np.ndarray:
+def ecualizacion_local(img, M, N):
     """Ecualización local de histograma con una ventana de M filas x N columnas.
 
     Para cada píxel se toma la ventana centrada en él, se calcula el histograma
     de la ventana y su transformación de ecualización T(r) = (L-1) * CDF(r),
     y se aplica T únicamente al píxel central.
 
-    Como T(r) = (L-1) * #{píxeles de la ventana <= r} / (M*N), evaluar T en el
-    píxel central equivale a contar cuántos píxeles de la ventana son menores o
-    iguales a él. Eso permite resolver cada fila de forma vectorizada.
+    Se usa la CDF de la unidad 2, sin restar su primer valor no nulo.
+    Para ventanas pares se fija el ancla en (M//2, N//2): hay un vecino más
+    hacia arriba/izquierda. El borde se completa replicando píxeles.
     """
-    if img.ndim != 2:
-        raise ValueError("La imagen debe estar en escala de grises.")
-    if not (isinstance(M, int) and isinstance(N, int) and M > 0 and N > 0):
+    if not isinstance(img, np.ndarray) or img.ndim != 2 or img.size == 0:
+        raise ValueError("La imagen debe ser una matriz no vacía en escala de grises.")
+    if img.dtype != np.uint8:
+        raise TypeError("La imagen debe ser uint8 (intensidades entre 0 y 255).")
+    if type(M) != int or type(N) != int:
+        raise ValueError("M y N deben ser enteros positivos.")
+    if M <= 0 or N <= 0:
         raise ValueError("M y N deben ser enteros positivos.")
 
     L = 256
-    img = img.astype(np.uint8)
     top, left = M // 2, N // 2
     bottom, right = M - 1 - top, N - 1 - left
     img_pad = cv2.copyMakeBorder(img, top, bottom, left, right, cv2.BORDER_REPLICATE)
 
-    # ventanas[i, j] es la ventana MxN centrada en el píxel (i, j) de la imagen original
-    ventanas = np.lib.stride_tricks.sliding_window_view(img_pad, (M, N))
-
-    salida = np.empty_like(img)
+    salida = np.zeros(img.shape, dtype=np.uint8)
     area = M * N
     for i in range(img.shape[0]):
-        centro = img[i][:, None, None]                        # (W, 1, 1)
-        cdf_centro = np.count_nonzero(ventanas[i] <= centro, axis=(1, 2)) / area
-        salida[i] = np.round((L - 1) * cdf_centro).astype(np.uint8)
+        for j in range(img.shape[1]):
+            ventana = img_pad[i:i + M, j:j + N]
+            # Histograma de la ventana y distribución acumulada.
+            hist, bins = np.histogram(ventana.flatten(), L, [0, L])
+            cdf = hist.cumsum() / area
+            salida[i, j] = np.round((L - 1) * cdf[img[i, j]])
     return salida
 
 
@@ -74,14 +77,20 @@ def main():
     axs[0].imshow(img, cmap="gray", vmin=0, vmax=255)
     axs[0].set_title("Original")
     for ax, (M, N) in zip(axs[1:], ventanas):
-        ax.imshow(ecualizacion_local(img, M, N), cmap="gray", vmin=0, vmax=255)
+        if (M, N) == (15, 15):
+            resultado = img_local
+        else:
+            resultado = ecualizacion_local(img, M, N)
+        ax.imshow(resultado, cmap="gray", vmin=0, vmax=255)
         ax.set_title(f"Ventana {M}x{N}")
     for ax in axs:
         ax.axis("off")
     fig.tight_layout()
     fig.savefig(OUTPUT_DIR / "p1_tamanios_ventana.png", dpi=150)
 
+    print(f"Figuras guardadas en {OUTPUT_DIR}")
     plt.show()
+    plt.close("all")
 
 
 if __name__ == "__main__":
