@@ -1,17 +1,20 @@
 # TUIA - Procesamiento de Imágenes I - TP1 (2026, 2° semestre)
 
-Resolución de los dos problemas del trabajo práctico. Las imágenes de entrada están
-incluidas en `data/` y el informe de la resolución está en `Informe_TP1_PDI.pdf`.
+Resolución de los dos problemas del trabajo práctico. El informe de la resolución
+está en `Informe_TP1_PDI.pdf`.
+
+Las imágenes de entrada no se incluyen en el repositorio. Antes de ejecutar los
+scripts, copiar las imágenes del enunciado (`Imagen_con_detalles_escondidos.tif` y
+`grade_sheet_1.png` a `grade_sheet_4.png`) en la carpeta `data/`.
 
 ## Archivos principales
 
 ```text
-data/                imágenes de entrada provistas por la cátedra
-outputs/             figuras, imágenes y CSV generados
+data/                imágenes de entrada provistas por la cátedra (copiar a mano)
+outputs/             salidas generadas al ejecutar los scripts (se crea automáticamente)
 problema1.py         ecualización local de histograma
 problema2.py         validación de planillas de calificaciones
 Informe_TP1_PDI.pdf  descripción, resultados y conclusiones
-requirements.txt     dependencias de Python
 ```
 
 ## Versiones utilizadas
@@ -26,7 +29,7 @@ La entrega se verificó con estas versiones:
 | Matplotlib | 3.11.1 |
 
 En el entorno de verificación, `cv2` proviene de `opencv-contrib-python`
-5.0.0.93. El archivo `requirements.txt` instala `opencv-python`; los scripts
+5.0.0.93. El comando de instalación usa `opencv-python`; los scripts
 utilizan funciones disponibles en ese paquete.
 
 ## Instalación
@@ -37,12 +40,12 @@ las dependencias:
 ```bash
 python -m venv .venv
 source .venv/bin/activate
-python -m pip install -r requirements.txt
+python -m pip install numpy==2.5.2 opencv-python matplotlib==3.11.1
 ```
 
 En Windows, activar el entorno con `.venv\Scripts\activate.bat` en CMD o con
 `.\.venv\Scripts\Activate.ps1` en PowerShell. Después, ejecutar
-`python -m pip install -r requirements.txt`.
+`python -m pip install numpy==2.5.2 opencv-python matplotlib==3.11.1`.
 
 ## Ejecución
 
